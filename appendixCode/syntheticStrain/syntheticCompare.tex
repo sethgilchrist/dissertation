@@ -1,0 +1,584 @@
+\begin{lstlisting}
+//      C++ Source.cpp
+//      
+//      Copyright 2010 Seth Gilchrist <seth@mech.ubc.ca>
+//      
+//      This program is free software; you can redistribute it and/or modify
+//      it under the terms of the GNU General Public License as published by
+//      the Free Software Foundation; either version 2 of the License, or
+//      (at your option) any later version.
+//      
+//      This program is distributed in the hope that it will be useful,
+//      but WITHOUT ANY WARRANTY; without even the implied warranty of
+//      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//      GNU General Public License for more details.
+//      
+//      You should have received a copy of the GNU General Public License
+//      along with this program; if not, write to the Free Software
+//      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+//      MA 02110-1301, USA.
+
+
+#include <iostream>
+
+#include "itkImage.h"
+#include "itkVector.h"
+#include "itkImageFileReader.h"
+
+#include "vtkUnstructuredGridReader.h"
+#include "vtkUnstructuredGrid.h"
+#include "vtkDoubleArray.h"
+#include "vtkCell.h"
+#include "vtkUnstructuredGridWriter.h"
+#include "vtkSmartPointer.h"
+#include "vtkPointData.h"
+#include "vtkCellData.h"
+#include "vtkCellDerivatives.h"
+#include "vtkCellDataToPointData.h"
+#include "vtkMath.h"
+
+#include "itkImageRegionConstIterator.h"
+#include "itkImageRegionIterator.h"
+#include "itkLinearInterpolateImageFunction.h"
+
+
+class CompareResults {
+	// Mesh Image Types
+	typedef vtkUnstructuredGrid						MeshImageType;
+	typedef vtkDoubleArray							MeshPixelType;
+	typedef vtkPointSet								MeshPointType;
+	typedef vtkCell									MeshCellType;
+	typedef vtkUnstructuredGridReader				MeshReaderType;
+	typedef vtkUnstructuredGridWriter				MeshWriterType;
+	// Vector Image Types
+	typedef double									VectorComponentType;
+	typedef itk::Vector< VectorComponentType, 3 >	VectorPixelType;
+	typedef itk::Image< VectorPixelType, 3 >		VectorImageType;
+	typedef	itk::ImageFileReader< VectorImageType >	VectorImageReaderType;
+	// Z Displacement Image Type
+	typedef itk::Image< VectorComponentType, 3 >	XDispImageType;
+	typedef itk::Image< VectorComponentType, 3 >	YDispImageType;	
+	typedef itk::Image< VectorComponentType, 3 >	ZDispImageType;
+
+	
+	
+	public:
+	CompareResults();
+	~CompareResults();
+	
+	void SetInputMeshFileName( std::string fileName );
+	void SetOutputMeshFileName( std::string fileName );
+	void SetVectorImageFileName( std::string fileName );
+	
+	void ReadMeshImage();
+	void ReadVectorImage();
+	void WriteVectorImage();
+	
+	void SetInputMeshImage( MeshImageType *meshImage );
+	void SetInputVectorImage( VectorImageType::Pointer vectorImage );
+	void SetOutputMeshImage( MeshImageType *meshImage );
+	
+	void CreateOutputImage();
+	void ComputeDisplacementImages();
+	void ComputeMeshDisplacement();
+	void ComputeMeshStrain();
+	void ComputeMeshPrincipalStrain();
+	void ComputeAbsoluteDifference();
+	void ComputeAbsoluteStrainDifference();
+	void ComputeVoxelNormalizedDifference();
+	
+	private:
+	vtkSmartPointer<MeshImageType>	m_InputMeshImage;
+	vtkSmartPointer<MeshImageType>	m_OutputMeshImage;
+	vtkSmartPointer<MeshReaderType>	m_MeshReader;
+	vtkSmartPointer<MeshWriterType>	m_MeshWriter;
+	VectorImageReaderType::Pointer	m_VectorReader;
+	VectorImageType::Pointer		m_InputVectorImage;
+	ZDispImageType::Pointer			m_XDispImage;
+	ZDispImageType::Pointer			m_YDispImage;
+	ZDispImageType::Pointer			m_ZDispImage;
+	std::string						m_InputMeshFileName;
+	std::string						m_OutputMeshFileName;
+	std::string						m_InputVectorFileName;
+};
+
+CompareResults::CompareResults(){
+	m_InputMeshImage		= vtkSmartPointer<MeshImageType>::New();
+	m_OutputMeshImage		= vtkSmartPointer<MeshImageType>::New();
+	m_InputVectorImage		= VectorImageType::New();
+	m_XDispImage			= XDispImageType::New();
+	m_YDispImage			= YDispImageType::New();
+	m_ZDispImage			= ZDispImageType::New();
+	m_MeshReader			= vtkSmartPointer<MeshReaderType>::New();
+	m_MeshWriter			= vtkSmartPointer<MeshWriterType>::New();
+	m_VectorReader			= VectorImageReaderType::New();
+}
+
+CompareResults::~CompareResults(){}
+
+void CompareResults::SetInputMeshFileName( std::string fileName )
+{
+	if( m_InputMeshFileName != fileName ){
+		m_InputMeshFileName = fileName;
+	}
+}
+void CompareResults::SetOutputMeshFileName( std::string fileName )
+{
+	if( m_OutputMeshFileName != fileName ){
+		m_OutputMeshFileName = fileName;
+	}
+}
+void CompareResults::SetVectorImageFileName( std::string fileName )
+{
+	if(m_InputVectorFileName != fileName ){
+		m_InputVectorFileName = fileName;
+	}
+}
+
+void CompareResults::ReadMeshImage()
+{
+	m_MeshReader->SetFileName( m_InputMeshFileName.c_str() );
+	m_MeshReader->Update();
+	CompareResults::SetInputMeshImage( m_MeshReader->GetOutput() );
+}
+void CompareResults::ReadVectorImage()
+{
+	m_VectorReader->SetFileName( m_InputVectorFileName.c_str() );
+	m_VectorReader->Update();
+	CompareResults::SetInputVectorImage( m_VectorReader->GetOutput() );	
+}
+void CompareResults::WriteVectorImage()
+{
+	m_MeshWriter->SetFileName( m_OutputMeshFileName.c_str() );
+	m_MeshWriter->SetInput( m_OutputMeshImage );
+	m_MeshWriter->Update();	
+}
+void CompareResults::SetOutputMeshImage( MeshImageType *meshImage )
+{
+	if( m_OutputMeshImage.GetPointer() != meshImage){
+		m_OutputMeshImage = meshImage;
+	}
+}
+void CompareResults::SetInputMeshImage( MeshImageType *meshImage )
+{
+	if( m_InputMeshImage.GetPointer() != meshImage ){
+		m_InputMeshImage = meshImage;
+	}
+}
+void CompareResults::SetInputVectorImage( VectorImageType::Pointer vectorImage )
+{
+	if( m_InputVectorImage.GetPointer() != vectorImage){
+		m_InputVectorImage = vectorImage;
+	}
+}
+
+
+void CompareResults::CreateOutputImage()
+{
+	// set the points
+	m_OutputMeshImage->SetPoints( m_InputMeshImage->GetPoints() );
+	// set the cells
+	m_OutputMeshImage->SetCells( m_InputMeshImage->GetCellTypesArray(),
+		m_InputMeshImage->GetCellLocationsArray(),
+		m_InputMeshImage->GetCells() );
+
+	// create the array for the absolute difference
+	vtkSmartPointer<vtkDoubleArray>		absoluteDifference = vtkSmartPointer<vtkDoubleArray>::New();
+	absoluteDifference->SetNumberOfComponents( 3 );	
+	absoluteDifference->SetNumberOfTuples( m_OutputMeshImage->GetNumberOfPoints() );
+	absoluteDifference->SetName( "Absolute Displacement Difference" );
+
+	// create the array for the expected displacement
+	vtkSmartPointer<vtkDoubleArray>		displacement = vtkSmartPointer<vtkDoubleArray>::New();
+	displacement->SetNumberOfComponents( 3 );	
+	displacement->SetNumberOfTuples( m_OutputMeshImage->GetNumberOfPoints() );
+	displacement->SetName( "Actual Displacement" );
+	
+	// create the array for the real value normalized difference
+	vtkSmartPointer<vtkDoubleArray>		relativeDifference = vtkSmartPointer<vtkDoubleArray>::New();
+	relativeDifference->SetNumberOfComponents( 3 );	
+	relativeDifference->SetNumberOfTuples( m_OutputMeshImage->GetNumberOfPoints() );
+	relativeDifference->SetName( "Voxel Size Normalized Difference" );
+	
+	vtkSmartPointer<vtkDoubleArray>		absoluteStrainDifference = vtkSmartPointer<vtkDoubleArray>::New();
+	absoluteStrainDifference->SetNumberOfComponents( 3 );
+	absoluteStrainDifference->SetNumberOfTuples( m_OutputMeshImage->GetNumberOfPoints() );
+	absoluteStrainDifference->SetName( "Absolute Strain Difference" );
+	
+	// create an array to pass the principal strain calcualted byt the DVC
+	vtkSmartPointer<vtkDoubleArray>		calculatedPrinicpalStrains = vtkSmartPointer<vtkDoubleArray>::New();
+	calculatedPrinicpalStrains->SetNumberOfComponents( 3 );
+	calculatedPrinicpalStrains->SetNumberOfTuples( m_OutputMeshImage->GetNumberOfPoints() );
+	calculatedPrinicpalStrains->SetName( "DVC Principal Strains" );
+	for (int i = 0; i < m_OutputMeshImage->GetNumberOfPoints(); ++i ){
+		double *cStrainPoint0 = m_InputMeshImage->GetPointData()->GetArray("Principal Strain Value 1")->GetTuple( i );
+		double *cStrainPoint1 = m_InputMeshImage->GetPointData()->GetArray("Principal Strain Value 2")->GetTuple( i );
+		double *cStrainPoint2 = m_InputMeshImage->GetPointData()->GetArray("Principal Strain Value 3")->GetTuple( i );
+		double *cStrainPoint = new double[3];
+		*cStrainPoint = *cStrainPoint0;
+		*(cStrainPoint+1) = *cStrainPoint1;
+		*(cStrainPoint+2) = *cStrainPoint2;
+		calculatedPrinicpalStrains->SetTuple( i, cStrainPoint );
+	}
+
+	// create an array to pass the strain tensors calcualted byt the DVC
+	vtkSmartPointer<vtkDoubleArray>		calculatedStrainTensor = vtkSmartPointer<vtkDoubleArray>::New();
+	calculatedStrainTensor->SetNumberOfComponents( 9 );
+	calculatedStrainTensor->SetNumberOfTuples( m_OutputMeshImage->GetNumberOfPoints() );
+	calculatedStrainTensor->SetName( "DVC Strain Tensor" );
+	for (int i = 0; i < m_OutputMeshImage->GetNumberOfPoints(); ++i ){	
+		double *cStrainTensor = new double[9];
+		m_InputMeshImage->GetPointData()->GetArray("Strain")->GetTuple( i, cStrainTensor );
+		calculatedStrainTensor->SetTuple( i, cStrainTensor );
+	}
+
+	// add the data arrays to the output image
+	m_OutputMeshImage->GetPointData()->AddArray( absoluteDifference );
+	m_OutputMeshImage->GetPointData()->AddArray( displacement );
+	m_OutputMeshImage->GetPointData()->AddArray( relativeDifference );
+	m_OutputMeshImage->GetPointData()->AddArray( absoluteStrainDifference );
+	m_OutputMeshImage->GetPointData()->AddArray( calculatedPrinicpalStrains );
+	m_OutputMeshImage->GetPointData()->AddArray( calculatedStrainTensor );
+}
+void CompareResults::ComputeDisplacementImages()
+{
+	// set the size, shape and spacing of the images for interpolation
+	m_XDispImage->SetOrigin( m_InputVectorImage->GetOrigin() );
+	m_XDispImage->SetSpacing( m_InputVectorImage->GetSpacing() );
+	m_XDispImage->SetRegions( m_InputVectorImage->GetLargestPossibleRegion() );
+	m_XDispImage->Allocate();
+	
+	m_YDispImage->SetOrigin( m_InputVectorImage->GetOrigin() );
+	m_YDispImage->SetSpacing( m_InputVectorImage->GetSpacing() );
+	m_YDispImage->SetRegions( m_InputVectorImage->GetLargestPossibleRegion() );
+	m_YDispImage->Allocate();
+	
+	m_ZDispImage->SetOrigin( m_InputVectorImage->GetOrigin() );
+	m_ZDispImage->SetSpacing( m_InputVectorImage->GetSpacing() );
+	m_ZDispImage->SetRegions( m_InputVectorImage->GetLargestPossibleRegion() );
+	m_ZDispImage->Allocate();
+	
+	// iterate through the input vector image and extract the components
+	typedef itk::ImageRegionConstIterator< VectorImageType >		VectorImageIteratorType;
+	VectorImageIteratorType		vIt( m_InputVectorImage, m_InputVectorImage->GetLargestPossibleRegion() );
+	
+	typedef itk::ImageRegionIterator< XDispImageType >				XDispImageIteratorType;
+	typedef itk::ImageRegionIterator< YDispImageType >				YDispImageIteratorType;
+	typedef itk::ImageRegionIterator< ZDispImageType >				ZDispImageIteratorType;
+	XDispImageIteratorType		xIt( m_XDispImage, m_InputVectorImage->GetLargestPossibleRegion() );
+	YDispImageIteratorType		yIt( m_YDispImage, m_InputVectorImage->GetLargestPossibleRegion() );
+	ZDispImageIteratorType		zIt( m_ZDispImage, m_InputVectorImage->GetLargestPossibleRegion() );
+	
+	for( vIt.GoToBegin(), xIt.GoToBegin(), yIt.GoToBegin(), zIt.GoToBegin(); !vIt.IsAtEnd(); ++vIt, ++xIt, ++yIt, ++zIt ){
+		VectorImageType::PixelType	cVPixel = vIt.Get();
+		
+		XDispImageType::PixelType	cXPixel = -cVPixel[0]; // the DVC returns the opposite of the warp image.
+		YDispImageType::PixelType	cYPixel = -cVPixel[1];
+		ZDispImageType::PixelType	cZPixel = -cVPixel[2];
+		
+		xIt.Set( cXPixel );
+		yIt.Set( cYPixel );
+		zIt.Set( cZPixel );
+	}
+}
+void CompareResults::ComputeMeshDisplacement()
+{
+	// define the interpolator that we are going to use
+	typedef itk::LinearInterpolateImageFunction< XDispImageType, double >	XInterpolatorType;
+	XInterpolatorType::Pointer	xInterpolator = XInterpolatorType::New();
+	xInterpolator->SetInputImage( m_XDispImage );
+	typedef itk::LinearInterpolateImageFunction< YDispImageType, double >	YInterpolatorType;
+	YInterpolatorType::Pointer	yInterpolator = YInterpolatorType::New();
+	yInterpolator->SetInputImage( m_YDispImage );
+	typedef itk::LinearInterpolateImageFunction< ZDispImageType, double >	ZInterpolatorType;
+	ZInterpolatorType::Pointer	zInterpolator = ZInterpolatorType::New();
+	zInterpolator->SetInputImage( m_ZDispImage );
+	
+	unsigned int nPoints = m_OutputMeshImage->GetNumberOfPoints();
+	for( unsigned int i = 0; i < nPoints; ++i ){
+		ZDispImageType::PointType	cZPt;
+		double *cMPt = m_OutputMeshImage->GetPoint( i );
+		cZPt[0] = *cMPt; cZPt[1] = *(cMPt+1); cZPt[2] = *(cMPt+2);
+		XDispImageType::PixelType xValue = xInterpolator->Evaluate( cZPt );
+		YDispImageType::PixelType yValue = yInterpolator->Evaluate( cZPt );
+		ZDispImageType::PixelType zValue = zInterpolator->Evaluate( cZPt );
+		double value[3];
+		value[0] = xValue;
+		value[1] = yValue;
+		value[2] = zValue;
+		
+		m_OutputMeshImage->GetPointData()->GetArray( "Actual Displacement" )->SetTuple( i, value );
+	}
+}
+void CompareResults::ComputeMeshStrain()
+{
+	// calculate derivatives
+	vtkCellDerivatives *derivativeCalculator = vtkCellDerivatives::New();
+	derivativeCalculator->SetInput( this->m_OutputMeshImage );
+	derivativeCalculator->SetTensorModeToComputeStrain();
+	derivativeCalculator->SetVectorModeToComputeGradient();
+	
+	derivativeCalculator->SetInputArrayToProcess(1,0,0,0,"Actual Displacement");
+	derivativeCalculator->Update();
+	this->SetOutputMeshImage( derivativeCalculator->GetUnstructuredGridOutput() );
+		
+	// move the data from cells to nodes
+	vtkCellDataToPointData	*dataTransformer = vtkCellDataToPointData::New();
+	dataTransformer->SetInput( this->m_OutputMeshImage );
+	dataTransformer->PassCellDataOn();
+	dataTransformer->SetInputArrayToProcess(0,0,1,1,"Strain");
+	dataTransformer->Update();
+	
+	this->SetOutputMeshImage( dataTransformer->GetUnstructuredGridOutput() );
+}
+void CompareResults::ComputeMeshPrincipalStrain()
+{
+	vtkSmartPointer<vtkMath>		mathAlgorithm = vtkSmartPointer<vtkMath>::New();
+	// First find the principal strains for the point data
+	vtkIdType nPoints = this->m_OutputMeshImage->GetPointData()->GetArray("Strain")->GetNumberOfTuples();
+	
+	typedef	vtkSmartPointer<vtkDoubleArray>		DataImagePixelPointer;
+	
+	// create the eigenvector containers
+	DataImagePixelPointer V0 = DataImagePixelPointer::New();
+	V0->SetNumberOfComponents(3);
+	V0->SetName("Actual Principal Strain Vector 1");
+	DataImagePixelPointer V1 = DataImagePixelPointer::New();
+	V1->SetNumberOfComponents(3);
+	V1->SetName("Actual Principal Strain Vector 2");	
+	DataImagePixelPointer V2 = DataImagePixelPointer::New();
+	V2->SetNumberOfComponents(3);
+	V2->SetName("Actual Principal Strain Vector 3");
+
+	// create the eigenvalue containers
+	DataImagePixelPointer	val0 = DataImagePixelPointer::New();
+	val0->SetNumberOfComponents(1);
+	val0->SetName("Actual Principal Strain Value 1");
+	DataImagePixelPointer	val1 = DataImagePixelPointer::New();
+	val1->SetNumberOfComponents(1);
+	val1->SetName("Actual Principal Strain Value 2");
+	DataImagePixelPointer	val2 = DataImagePixelPointer::New();
+	val2->SetNumberOfComponents(1);
+	val2->SetName("Actual Principal Strain Value 3");
+	
+	
+	for ( unsigned int i = 0; i < nPoints; ++i ){
+		// Get the point tensor
+		double *cTensorRaw = this->m_OutputMeshImage->GetPointData()->GetArray("Strain")->GetTuple( i );
+		// reform tensor into an appropreate array
+		double *cTensor[3];
+		double cT0[3];
+		double cT1[3];
+		double cT2[3];
+
+		cTensor[0] = cT0; cTensor[1] = cT1; cTensor[2] = cT2;
+
+		cT0[0] = *cTensorRaw;
+		cT0[1] = *(cTensorRaw+1);
+		cT0[2] = *(cTensorRaw+2);	
+		cT1[0] = *(cTensorRaw+3);
+		cT1[1] = *(cTensorRaw+4);
+		cT1[2] = *(cTensorRaw+5);
+		cT2[0] = *(cTensorRaw+6);
+		cT2[1] = *(cTensorRaw+7);
+		cT2[2] = *(cTensorRaw+8);
+				
+		// Get the eigen-values and -vectors
+		double eigenValues[3]; // The Eigenvalues
+		double *eigenVectors[3]; // vector of pointers to eigenvectors
+		double v0[3]; // eigen vector 1
+		double v1[3]; // eigen vector 2
+		double v2[3]; // eigen vector 3
+		eigenVectors[0] = v0; eigenVectors[1] = v1; eigenVectors[2] = v2;
+		
+		// perform the calculation of the principal strains
+		mathAlgorithm->Jacobi(cTensor,eigenValues,eigenVectors);
+		
+		// save the values and vectors into the data image
+		V0->InsertNextTuple( eigenVectors[0] );
+		val0->InsertNextTuple( &eigenValues[0] );
+		V1->InsertNextTuple( eigenVectors[1] );
+		val1->InsertNextTuple( &eigenValues[1] );
+		V2->InsertNextTuple( eigenVectors[2] );
+		val2->InsertNextTuple( &eigenValues[2] );
+	}
+	
+	this->m_OutputMeshImage->GetPointData()->AddArray( V0 );
+	this->m_OutputMeshImage->GetPointData()->AddArray( val0 );
+	this->m_OutputMeshImage->GetPointData()->AddArray( V1 );
+	this->m_OutputMeshImage->GetPointData()->AddArray( val1 );
+	this->m_OutputMeshImage->GetPointData()->AddArray( V2 );
+	this->m_OutputMeshImage->GetPointData()->AddArray( val2 );
+	
+	// next find the principal strains for the cell data
+	nPoints = this->m_OutputMeshImage->GetCellData()->GetArray("Strain")->GetNumberOfTuples();
+	
+	// create the eigenvector containers
+	V0 = DataImagePixelPointer::New();
+	V0->SetNumberOfComponents(3);
+	V0->SetName("Actual Principal Strain Vector 1");
+	V1 = DataImagePixelPointer::New();
+	V1->SetNumberOfComponents(3);
+	V1->SetName("Actual Principal Strain Vector 2");	
+	V2 = DataImagePixelPointer::New();
+	V2->SetNumberOfComponents(3);
+	V2->SetName("Actual Principal Strain Vector 3");
+
+	// create the eigenvalue containers
+	val0 = DataImagePixelPointer::New();
+	val0->SetNumberOfComponents(1);
+	val0->SetName("Actual Principal Strain Value 1");
+	val1 = DataImagePixelPointer::New();
+	val1->SetNumberOfComponents(1);
+	val1->SetName("Actual Principal Strain Value 2");
+	val2 = DataImagePixelPointer::New();
+	val2->SetNumberOfComponents(1);
+	val2->SetName("Actual Principal Strain Value 3");
+	
+	
+	for ( unsigned int i = 0; i < nPoints; ++i ){
+		// Get the point tensor
+		double *cTensorRaw = this->m_OutputMeshImage->GetCellData()->GetArray("Strain")->GetTuple( i );
+		// reform tensor into an appropreate array
+		double *cTensor[3];
+		double cT0[3];
+		double cT1[3];
+		double cT2[3];
+
+		cTensor[0] = cT0; cTensor[1] = cT1; cTensor[2] = cT2;
+
+		cT0[0] = *cTensorRaw;
+		cT0[1] = *(cTensorRaw+1);
+		cT0[2] = *(cTensorRaw+2);	
+		cT1[0] = *(cTensorRaw+3);
+		cT1[1] = *(cTensorRaw+4);
+		cT1[2] = *(cTensorRaw+5);
+		cT2[0] = *(cTensorRaw+6);
+		cT2[1] = *(cTensorRaw+7);
+		cT2[2] = *(cTensorRaw+8);
+				
+		// Get the eigen-values and -vectors
+		double eigenValues[3]; // The Eigenvalues
+		double *eigenVectors[3]; // vector of pointers to eigenvectors
+		double v0[3]; // eigen vector 1
+		double v1[3]; // eigen vector 2
+		double v2[3]; // eigen vector 3
+		eigenVectors[0] = v0; eigenVectors[1] = v1; eigenVectors[2] = v2;
+		
+		// perform the calculation of the principal strains
+		mathAlgorithm->Jacobi(cTensor,eigenValues,eigenVectors);
+		
+		// save the values and vectors into the data image
+		V0->InsertNextTuple( eigenVectors[0] );
+		val0->InsertNextTuple( &eigenValues[0] );
+		V1->InsertNextTuple( eigenVectors[1] );
+		val1->InsertNextTuple( &eigenValues[1] );
+		V2->InsertNextTuple( eigenVectors[2] );
+		val2->InsertNextTuple( &eigenValues[2] );
+	}
+	
+	this->m_OutputMeshImage->GetCellData()->AddArray( V0 );
+	this->m_OutputMeshImage->GetCellData()->AddArray( val0 );
+	this->m_OutputMeshImage->GetCellData()->AddArray( V1 );
+	this->m_OutputMeshImage->GetCellData()->AddArray( val1 );
+	this->m_OutputMeshImage->GetCellData()->AddArray( V2 );
+	this->m_OutputMeshImage->GetCellData()->AddArray( val2 );
+}
+void CompareResults::ComputeAbsoluteDifference()
+{
+	unsigned int nPoints = m_OutputMeshImage->GetNumberOfPoints();
+	for( unsigned int i = 0; i < nPoints; ++i){
+		double *aDisp = m_OutputMeshImage->GetPointData()->GetArray( "Actual Displacement" )->GetTuple( i ); // actual difference
+		double *cDisp = m_InputMeshImage->GetPointData()->GetArray( "Displacement" )->GetTuple( i ); // calculated difference
+		double aDiff[3]; 
+		aDiff[0] = std::abs( *cDisp - *aDisp ); 
+		aDiff[1] = std::abs( *(cDisp+1) - *(aDisp+1) ); 
+		aDiff[2] = std::abs( *(cDisp+2) - *(aDisp+2) );
+		m_OutputMeshImage->GetPointData()->GetArray( "Absolute Displacement Difference" )->SetTuple( i, aDiff );
+	}
+}
+void CompareResults::ComputeAbsoluteStrainDifference()
+{
+	unsigned int nPoints = m_OutputMeshImage->GetNumberOfPoints();
+	for( unsigned int i = 0; i < nPoints; ++i){
+		
+		double *aStrain1 = m_OutputMeshImage->GetPointData()->GetArray( "Actual Principal Strain Value 1" )->GetTuple( i ); // actual strain 1
+		double *cStrain1 = m_InputMeshImage->GetPointData()->GetArray( "Principal Strain Value 1" )->GetTuple( i ); // calculated strain 1
+		
+		double *aStrain2 = m_OutputMeshImage->GetPointData()->GetArray( "Actual Principal Strain Value 2" )->GetTuple( i ); // actual strain 2
+		double *cStrain2 = m_InputMeshImage->GetPointData()->GetArray( "Principal Strain Value 2" )->GetTuple( i ); // calculated strain 2
+		
+		double *aStrain3 = m_OutputMeshImage->GetPointData()->GetArray( "Actual Principal Strain Value 3" )->GetTuple( i ); // actual strain 3
+		double *cStrain3 = m_InputMeshImage->GetPointData()->GetArray( "Principal Strain Value 3" )->GetTuple( i ); // calculated strain 3
+		
+		double aDiff[3]; 
+		aDiff[0] = std::abs( *cStrain1 - *aStrain1 );
+		aDiff[1] = std::abs( *cStrain2 - *aStrain2 );
+		aDiff[2] = std::abs( *cStrain3 - *aStrain3 );
+		m_OutputMeshImage->GetPointData()->GetArray( "Absolute Strain Difference" )->SetTuple( i, aDiff );
+	}
+}
+void CompareResults::ComputeVoxelNormalizedDifference()
+{
+	unsigned int nPoints = m_OutputMeshImage->GetNumberOfPoints();
+	for( unsigned int i = 0; i <nPoints; ++i ){
+		double *cDiff = m_OutputMeshImage->GetPointData()->GetArray( "Absolute Displacement Difference" )->GetTuple( i ); // calculated difference
+		VectorImageType::SpacingType voxelSpacing = m_InputVectorImage->GetSpacing();
+		double nDiff[3]; // the normalized difference 
+		nDiff[0] = std::abs(*cDiff / voxelSpacing[0]);
+		nDiff[1] = std::abs(*(cDiff+1) / voxelSpacing[1]);
+		nDiff[2] = std::abs(*(cDiff+2) / voxelSpacing[2]);
+		m_OutputMeshImage->GetPointData()->GetArray( "Voxel Size Normalized Difference" )->SetTuple( i, nDiff );
+	}
+}
+
+
+int main(int argc, char** argv)
+{
+	if( argc < 4 || argc > 4){ // if the the inputs are wrong, abort
+		std::cout<<"Wrong number of inputs."<<std::endl;
+		std::cout<<"Usage:"<<std::endl<<argv[0]<<" [InputMeshImage] [VectorImage] [OutputMeshImage]"<<std::endl;
+		std::cout<<"InputMeshImage = Mesh image for analysis"<<std::endl;
+		std::cout<<"VectorImage = Vector image to compare the mesh image to"<<std::endl;
+		std::cout<<"OutputMeshImage = Output mesh image"<<std::endl;
+		std::cout<<"Aborting."<<std::endl;
+		return EXIT_FAILURE;
+	}
+
+	CompareResults *comp = new CompareResults;
+	
+	std::string meshInput = argv[1];
+	std::string vectorInput = argv[2];
+	std::string meshOutput = argv[3];
+	comp->SetInputMeshFileName( meshInput );
+	comp->SetVectorImageFileName( vectorInput );
+	comp->SetOutputMeshFileName( meshOutput );
+	
+	std::cout<<std::endl<<"Reading the input mesh file"<<std::endl;
+	comp->ReadMeshImage();
+	std::cout<<"Reading the input vector image"<<std::endl;
+	comp->ReadVectorImage();
+	std::cout<<"Creating the output image"<<std::endl;
+	comp->CreateOutputImage();
+	std::cout<<"Creating the displacement images for interpolation"<<std::endl;
+	comp->ComputeDisplacementImages();
+	std::cout<<"Interpolating the displacement data"<<std::endl;
+	comp->ComputeMeshDisplacement();
+	std::cout<<"Calculating actual strains"<<std::endl;
+	comp->ComputeMeshStrain();
+	std::cout<<"Calculating actual principal strains"<<std::endl;
+	comp->ComputeMeshPrincipalStrain();
+	std::cout<<"Calculating the absolute difference between the actual and calculated displacements"<<std::endl;
+	comp->ComputeAbsoluteDifference();
+	std::cout<<"Calculating the voxel spacing normalized difference between actual and calculated displacement values"<<std::endl;
+	comp->ComputeVoxelNormalizedDifference();
+	std::cout<<"Calculating the absolute difference between the actual and calculated strains"<<std::endl;
+	comp->ComputeAbsoluteStrainDifference();
+	
+	std::cout<<"Writing the output to: "<<meshOutput<<std::endl;
+	comp->WriteVectorImage();
+	std::cout<<"Evaluation Complete"<<std::endl<<std::endl;
+	return 0;
+}
+
+\end{lstlisting}

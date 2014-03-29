@@ -1,0 +1,325 @@
+\chapter{Supporting Materials}
+
+\section{Femoral neck internal rotation justification}
+\label{sec:support_orientation}
+Femoral orientation in the fall protocol has the angle of the femoral neck defined as 15$^\circ$ internal rotation.
+This value can be shown to be approximately correct using data from \citet{toogood_proximal_2009} and \citet{feldman_reducing_2007}.
+\citet{feldman_reducing_2007} reported a ``hip proximity angle" of approximately 8$^\circ$ posterior.
+This angle is referenced to the centre of the pelvis, and is a different angle when referenced to the centre of the femoral head (Fig.~\ref{fig:hipProximity}).
+
+\begin{figure}
+	\centering
+	\includegraphics[width=1\linewidth]{./appendix1/Figures/hipProximity}
+	\caption[Hip proximity related to femoral head]{\textbf{The hip proximity angle is referenced to the centre of the pelvis. Changing the reference to the centre of the femoral head roughly doubles the angle}. Graphic adapted from \citet{inversitus_prostatic_2012}, permission not required.}
+	\label{fig:hipProximity}
+\end{figure}
+
+Assuming that the femoral head lies approximately half way from the centre of the pelvis to the surface of the hip, a hip proximity angle of 8$^\circ$ gives an angle of approximately 16$^\circ$ degrees when referenced to the femoral head, as shown in Equ.~\ref{equ:hipProx}.
+
+\begin{eqnarray}
+\label{equ:hipProx}
+\tan(\alpha) &=& \frac{x}{L}  \\
+\Leftrightarrow x &=& L \cdot \tan(\alpha) \\
+\tan{\beta} &=& \frac{x}{L/2} \\
+\Leftrightarrow \tan{\beta} &=& \frac{L \cdot \tan(\alpha) }{L/2} \\
+\therefore \beta &=& \arctan(2 \cdot \tan(\alpha)) \\
+\Leftrightarrow \beta &=& \arctan(2 \cdot \tan(8^\circ)) = 15.7^\circ
+\end{eqnarray}
+
+The impact angle of 16$^\circ$ internal rotation about the femoral head is independent of femoral twist, which tends to decrease the value of the impact angle.
+The femoral twist in the normal population is 9.73$^\circ$, so the resulting average impact angle would be 6.0$^\circ$.
+This is not the value of 15$^\circ$ used in the research, but given that the impact angle had a standard deviation of 15$^\circ$ and femoral twist has a standard deviation of 9.28$^\circ$, the standard orientation is well within the expected normal variation.
+
+\section{Equipment characterization experiments}
+\label{sec:equipment}
+This section details validation and characterization experiments conducted to ensure data integrity and understand measurement uncertainty.
+Each subsection will detail an experimental and the results of that experiment.
+
+\subsection{Drop tower fall velocity characterization}
+\label{sec:equipment_dt_velocity}
+The drop tower is a highly constrained, four post design with four in-plane bearings used to direct the gantry.
+Due to the constrained nature of the bearings and posts, the drop tower does not act in free-fall during a drop, but instead must be characterized such that the height can be used to anticipate the fall velocity.
+
+\subsubsection{Method}
+The drop tower gantry was loaded with 34~\ac{kg} of mass and dropped from three heights with five different masses. Each mass and height were repeated a minimum of two times.
+Drops 32.4~\ac{kg} and 34~\ac{kg} were repeated three times at 0.6~\ac{m}.
+The gantry was filmed using high speed cameras (V12.1, Vision Research, Wayne, NJ) at a frame rate of 6200~\ac{khz}, and resolution of 1280x800~\ac{px} (4.8~\ac{px}/\ac{mm}).
+The velocity was measured using the time for the drop tower gantry to travel the inch before contact.
+Velocity vs.\ drop height was plotted for each mass, additionally, the data at each drop height were combined to generate and average curve for the 29.5--41~\ac{kg} mass range.
+
+\subsubsection{Results}
+
+The drop tower displayed a linear relationship between drop height and velocity (Fig.~\ref{fig:dtVelocity}).
+The mass had a much smaller influence than the height, however, the single mass below 30~\ac{kg} displayed a much lower velocity profile than the other masses.
+Additionally, at the highest drop height, the influence of mass became erratic, with the two highest masses achieving the 3$^{rd}$ and 4$^{th}$ out of five slowest speeds.
+The average line was highly linear (Equ.~\ref{equ:dtVelocity}, $R^2 = 0.9$, $p = 0.015$).
+The target velocity for the drops in the experiments was 3.0~\ac{m}/\ac{s}, and from the averaged equation, this lead to a drop height of 62~\ac{cm}.
+
+\begin{equation}
+\label{equ:dtVelocity}
+Velocity = 2.288 \cdot Height + 1.575
+\end{equation}
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{./appendix1/Figures/dtVelocity}
+\caption[Drop tower calibration]{\textbf{The drop tower velocity was sensitive to velocity, and to some degree to mass loaded. At mass $>$30~\ac{kg}, the variation due to mass was irregular.} Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:dtVelocity}
+\end{figure}
+
+\subsection{Potting torsion resistance}
+\label{sec:equipment_potting}
+The method used to pot the specimens was changed to make the potting easier and something that can be done well ahead of time.
+Previously, the specimens were potted directly into an aluminium tube that held them during the test.
+The new method places the specimens in a 2~inch, schedule 40 \ac{pvc} pipe which is then secured in the testing apparatus using three set screws.
+This test was to confirm that the set screws could resist the anticipated torque loads applied during testing.
+An instructional video for how to pot the specimens can be found at \url{http://youtu.be/qK967DE0y-Q}.
+
+\subsubsection{Methods}
+The torque loads were estimated by mounting a plastic bone replica (v3 large composite femur, Sawbones, Vashon, WA) and taking a measurement from the superior, in the transverse plane from the most lateral point on the greater trochanter to the most medial point on the femoral head.
+This measurement was 1.2~\ac{cm}.
+The maximum expected load for the femurs was 6000~\ac{n}, leading to a maximum expected torsion of 72~\ac{n}\ac{m}.
+A factor of safety of 1.3 was considered acceptable for this torque value, leading to a maximum testing torque of 93.6~\ac{n}\ac{m}, which was rounded up to 100~\ac{n}\ac{m}.
+
+A piece of 1~inch, hexagonal bar with a 3/8~inch, tapped hole was potted in the same \ac{pvc} pipe that was going to be used for the testing (Fig.~\ref{fig:PottingTest}).
+A torque wrench was used to apply three torsion values to the bolt, 60, 80 and 100~\ac{n}\ac{m}.
+Photographs were taken after each torsion to check if any displacement had taken place.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{./appendix1/Figures/PottingTest}
+\caption[Potting torsion resistance]{\textbf{A 3/8~inch bolt was potted in the \ac{pvc} pipe that would be used for testing. The bolt was turned with a torque wrench and photographs were used to determine if any rotation had taken place.} Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:PottingTest}
+\end{figure}
+
+\subsubsection{Results}
+Torsion values of 60, 80 and 100~\ac{n}\ac{m} were successfully withstood by the set screws.
+Notably, the 3/8~inch bolt yielded at about 98~\ac{n}\ac{m} and 100~\ac{n}\ac{m} was attained only for a short time before the test had to be completed in order to avoid torquing the head off the bolt.
+
+\subsection{Instron compliance}
+\label{sec:equipment_instron_compliance}
+Displacement were measured in the Instron using the \ac{lvdt} incorporated in the machine, which measures the ram displacement.
+This value will consist of the displacement of the trochanter due to the compression of the bone, as well as the displacement of the trochanter due to translation of the head as the loading plates and bearing plates below the specimen compress.
+This tests was conducted to measure the degree that the loading and bearing plates below the femoral head compress during testing.
+
+\subsubsection{Methods}
+The test apparatus consists of three ground steel plates with bearing plates between them and two aluminium space plates on either side of the specimen (Fig.~\ref{fig:InstronCompliance}).
+Two pieces of rubber were placed in the space normally occupied by a specimen.
+These rubber mats were there to provide increased compliance and prevent machine overload.
+The cross head of the Instron was moved down manually in displacement control until a compressive force of 500~\ac{n} was achieved.
+The force was allowed to settle until it was steady within 1~\ac{n} for 60~\ac{s} and the displacement was read.
+The compressive force was increased by 500~\ac{n} and the process repeated until a compressive force of 2000~\ac{n} and been achieved.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{0.58\textwidth}
+\includegraphics[width=\textwidth]{./appendix1/Figures/InstronCompliance}
+\caption{Schematic of the loading apparatus}
+\label{fig:instronCompSchematic}
+\end{subfigure}
+~
+\begin{subfigure}[b]{0.38\textwidth}
+\includegraphics[width=\textwidth]{./appendix1/Figures/InstronSetup}
+\caption{Photo of the loading apparatus}
+\label{fig:instronCompPhoto}
+\end{subfigure}
+\caption[Instron compliance test]{\textbf{In the Instron compliance test a rubber mat was compressed in the test apparatus. A dial gauge was used to read the compression of the rubber and this was subtracted from the displacement of the load cell to get the compression of the lower plates.} Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:InstronCompliance}
+\end{figure}
+
+\subsubsection{Results}
+The compression of the apparatus increased with increasing force in an approximately linear fashion (Fig.~\ref{fig:insComp}).
+The stiffness of the bearing plates was seen to be approximately 30~\ac{kn}/\ac{mm}, which is about 10-30x that observed for a typical specimen.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{./appendix1/Figures/insComp}
+\caption[Instron compliance results]{The Instron compliance tests showed a roughly linear increase in displacement with force. The stiffness was calculated by fitting a line to the data, and the equation is given here. Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:insComp}
+\end{figure}
+
+\subsection{Drop tower compliance}
+\label{sec:equipment_dt_compliance}
+The drop tower is a linear impact device consisting of four vertical rails and a horizontal gantry.
+It is constructed almost entirely out of 1$\frac{5}{8}$~inch strut lock tubing.
+This design gives it great flexibility to be reconfigured, but the open cross section and friction-lock joints mean that as a foundation material it is quite compliant.
+This compliance could lead to potentially large displacements of the loading platform during impact.
+To quantify this displacement, to things needed to ne known, i) the compliance of the structure; ii) the mass mounted to the top of the structure.
+
+\subsubsection{Methods}
+To measure the compliance of the drop tower, a significant load would need to be applied and the displacement of the loading platform would need to be measured.
+Unlike the Instron, the drop tower does not have a way to apply a constant, high force to the platform, therefore, an external means of applying the force was used.
+A 50~gallon barrel was placed on top of the loading platform and filled with rocks to apply the load (Fig.~\ref{fig:dtCompliance}).
+A dial gauge was fixed to a platform sitting on the floor and oriented to measure vertical displacement using a laser level.
+The drop tower's single axis load cell (LC 402, Omega Engineering, Stamford, CT) was used to measure compressive loads.
+Rocks were transferred into the barrel and load and displacement readings were taken at 500~\ac{n} intervals.
+Measurements were taken during loading and unloading and the stiffness of the machine was determined by averaging the slopes of the loading and unloading curves.
+
+After unloading the drop tower loading platform was removed, along with the T-slot plate, load cell and all other mounting apparatus down to the strut lock tubing foundation.
+These items were weighed using a digital scale for items less than 20~\ac{kg} and an analogue bathroom-style scale.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{0.3\textwidth}
+\includegraphics[width=\textwidth]{./appendix1/Figures/dtAndRocks}
+\caption{Before}
+\label{fig:dtCompBefore}
+\end{subfigure}
+~
+\begin{subfigure}[b]{0.3\textwidth}
+\includegraphics[width=\textwidth]{./appendix1/Figures/dtFullRocks}
+\caption{After}
+\label{fig:dtCompAfter}
+\end{subfigure}
+~
+\begin{subfigure}[b]{0.3\textwidth}
+\includegraphics[width=\textwidth]{./appendix1/Figures/dtDialGauge}
+\caption{Dial gauge}
+\label{fig:dtCompDialGauge}
+\end{subfigure}
+\caption[Drop tower compliance test]{\textbf{The drop tower was loaded using a barrel filled with rocks. The displacement of the loading platform was measured using a dial gauge which was referenced to the ground.} Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:dtCompliance}
+\end{figure}
+
+\subsubsection{Results}
+The drop tower showed linear behaviour during loading and unloading (Fig.~\ref{fig:dtComp}).
+The stiffness varied by 13\% between loading and unloading.
+This change in stiffness is likely due to the settling of the frictions joints at junctions in the strut lock tubing.
+The average stiffness for both tasks was 5637~\ac{n}/\ac{mm}.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{./appendix1/Figures/dtComp}
+\caption[Drop tower compliance results]{\textbf{The drop tower showed linear behaviour during both loading and unloading.} Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:dtComp}
+\end{figure}
+
+\begin{table}
+\centering
+\caption[Drop tower apparatus mass]{Mass of all all test apparatus used in the drop tower.}
+\label{tab:equipment_dt_mass}
+\begin{tabular}{l >{\centering\arraybackslash}p{6cm}}
+\toprule
+Item & Mass (\ac{kg}) \\
+\midrule
+Loading platen & 23.18 \\
+Load cell & 6.419 \\
+T-slot plate & 21.36 \\
+Bearing plates & 1.896 \\
+Head support plates & 2.327 \\
+Mount plate & 13.66 \\
+Bottom plate & 14.54 \\
+Pivot rod & 0.507 \\
+\textbf{Total} & \textbf{83.89}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Foam compliance}
+\label{sec:equipment_foam}
+The foam used to pad the greater trochanter was bought from a local Evazote$^{\texttrademark}$ supplier.
+Foams can be prone to variations in material properties because of the complexity of the manufacturing process.
+For this reason, an experiment was performed to measure the foam's compliance at different levels of compression.
+
+\subsubsection{Methods}
+A 2~inch square piece of foam was cut from the same sheet of foam used in the fall simulation tests.
+The foam was loaded into the Instron materials testing machine (8874, Instron, Noorwood, MA) an compressed to 75\%, 50\% and 25\% of its original height in displacement control.
+Compressive force measurements were taken at each level of compression.
+Stiffness was defined as the average stiffness to the compression level under inspection.
+
+\subsubsection{Results}
+The stiffness was seen to increase by a power-law relationship as compression increased (Table~\ref{tab:equipment_foam_compression}).
+The stiffness was relatively constant between the 25 and 50\% compression measurements, but as the foam pores collapsed the material started densification, leading to a sharp increase in stiffness.
+
+\begin{table}
+\centering
+\caption[Foam stiffness and stress]{Nominal stiffness and stress in the foam at various compression levels.}
+\label{tab:equipment_foam_compression}
+\begin{tabular}{l >{\centering\arraybackslash}p{4cm} >{\centering\arraybackslash}p{4cm}}
+\toprule
+Compression(\%) & Stress (\acs{kpa}) & Stiffness (\acs{kn}/\acs{m}) \\
+\midrule
+25 & 36 & 19.92 \\
+50 & 95 & 26.45 \\
+75 & 308& 57.39 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Optical position measurement verification}
+\label{sec:equipment_position}
+The positions of the greater trochanter and impact hammer were measured using image tracking techniques.
+This technique involved videoing the impact hammer and the greater trochanter during the impact event and using TEMA Automotive (v3.0, Image Systems, North Hollywood, CA) to measure the displacements.
+Frames from the video were loaded input TEMA and an image of a calibration target was used to correct the images for lens distortion.
+Tracking was then done using a 1~\ac{cm} square target on the hammer, and the junction of the bone and \acf{pmma} potting cap.
+
+\subsubsection{Methods}
+To determine the accuracy of this measurement, the impact hammer used in the fall simulation testes was secured in an Instron materials testing machine (8874, Instron, Noorwood, MA).
+A piece of surrogate bone with a similar colour to human bone was secured to the impact hammer using the same \ac{pmma} as used in the actual testing.
+The camera and lens used in the fall simulation tests was set up at the same distance, focal length, focus and frame rate as in the fall simulations.
+Lighting was also adjusted to be similar to the fall simulation tests.
+A dial gauge was arranged to measure the displacement of the impact hammer to confirm the displacement reported by the TEMA and Instron software.
+A second camera was arranged to record the dial gauge during the tests and spot comparisons were made between the Instron output and dial gauge reading.
+A \acf{daq} was used to record the output of the Instron and the camera trigger signal to synchronize the readings.
+The Instron was programmed to move the cross head according to the equation $5\sin(10\pi t)$, which gives a maximum velocity of 157~\ac{mm}/\ac{s}.
+
+\subsubsection{Results}
+The Instron output and dial gauge showed good correlation.
+Ten spot checks showed an average(\ac{sd}) difference of -0.10(0.06)~\ac{mm}.
+The comparison of the TEMA with the Instron also showed good correlation (Fig.~\ref{fig:PlotInsTEMA}), with an average(\ac{sd}) error of -0.032(.043)~\ac{mm}.
+
+\begin{table}
+\centering
+\caption[Foam stiffness and stress]{Nominal stiffness and stress in the foam at various compression levels.}
+\label{tab:equipment_position}
+\begin{tabular}{l >{\centering\arraybackslash}p{4cm} >{\centering\arraybackslash}p{4cm} c }
+	\toprule
+	Time post trigger (\ac{ms}) & TEMA (\ac{mm}) & Instron (\ac{mm}) & Difference (mm) \\ \midrule
+	13.648                      & 0              & 0                 &  \\
+	64.643                      & 4.9276         & 5.08              &  \\
+	114.771                     & 9.906          & 10.0253           &  \\
+	164.79                      & 4.8514         & 4.9423            &  \\
+	189.528                     & 1.397          & 1.3886            &  \\
+	253.435                     & 3.175          & 3.3339            &  \\
+	2376.437                    & 6.731          & 6.8701            &  \\
+	292.821                     & 8.763          & 8.9179            &  \\
+	364.214                     & 4.953          & 5.0302            &  \\
+	381.14                      & 2.413          & 2.4404            &  \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.8\linewidth]{./appendix1/Figures/PlotInsTEMA}
+\caption[TEMA measured displacement verification]{\textbf{The displacement measured by TEMA for both the trochanter and the impact hammer agreed well with each other and with the output of the Instron machine.} Graphic \copyright Seth Gilchrist, 2013.}
+\label{fig:PlotInsTEMA}
+\end{figure}
+
+
+	
+\section{Computer Code}
+Critical for being able to reproduce the result of any analysis presented in this thesis is knowledge of the computer code written to analyse the data.
+This section contains the code used to analyse data and create synthetic data sets for the \ac{dvc}.
+Each section contains a link to an immutable on-line version of the code, hosed at GitHub (\url{http://www.github.com}).
+Any changes made to the code after publication of this thesis will be available on GitHub.
+
+\subsection{Drop tower and Instron analysis code}
+\label{sec:code_dt_ins_analysis}
+\input{./appendix1/analysisCode/analysisCode}
+
+\subsection{\acs*{dic} to \acs*{dic} registration and comparison code}
+\label{sec:code_dic_dic_register_compare}
+\input{./appendix1/compareSurfs/compareSurfs}		
+
+\subsection{\acs*{dvc} code}
+\label{sec:code_dvc}
+\input{appendix1/dvcCode/dvcCode}
+
+\subsection{\acs*{dvc} verification code}
+\label{sec:code_synthetic}
+This section contains code used to verify the \ac{dvc} algorithm.
+The code applies a deformation field to a digital image, which creates strain for analysis using the \ac{dvc} algorithm.
+There are two codes included, the first applies the strain to an image to create an analysis image for the \ac{dvc}.
+The second takes the mesh output from the analysis and interpolates the true strain value at each point in the mesh, creating a second mesh containing the output, the ground truth and comparisons.
+\input{appendix1/syntheticStrain/syntheticStrain}
+

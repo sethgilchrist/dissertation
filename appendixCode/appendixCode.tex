@@ -1,0 +1,148 @@
+\chapter{Computer Code}
+\label{ch:code}
+Critical for being able to reproduce the result of any analysis presented in this thesis is knowledge of the computer code used to analyse the data.
+This section contains the code used to analyse data and create synthetic data sets for the \ac{dvc}.
+Each section contains a link to an on-line version of the code, hosed at GitHub (\url{http://www.github.com}).
+Any changes made to the code after publication of this thesis will be available on GitHub.
+
+\section{Drop tower and Instron analysis}
+\label{sec:code_dt_ins_analysis}
+This section contains the MatLab code used to analyse the fall simulator and Instron data.
+All of the code, except for the example input (\S\ref{sec:code_dt_ins_analysis_example}), can be found at \url{https://github.com/sethgilchrist/DroptowerInstronAnalysis}.
+
+The tests in the fall simulator and Instron generated huge amounts of data.
+The organization and analysis of this data was standardized through the use of classes for each dataset, test and specimen.
+There are eight classes in each experiment (Figure~\ref{fig:AnalysisHigherarchy}).
+The Instron test contains a \ac{dic} dataset, a \ac{daq} dataset and a link to the specimen associated with the experiment.
+The drop tower test contains a \ac{dic} dataset, a \ac{daq} dataset, a displacement dataset and a link to the specimen associated with the experiment.
+Note that due to different data begin collected in the Instron \ac{daq} dataset than the drop tower \ac{daq} dataset, these are two different classes.
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{./appendixCode/analysisCode/Figures/AnalysisHigherarchy}
+\caption[Data analysis hierarchy]{The hierarchy of the experimental data analysis. Each box is a Matlab class. Graphic \textcopyright Seth Gilchrist, 2013.}
+\label{fig:AnalysisHigherarchy}
+\end{figure}
+
+The reason for implementing the code in this way was so that all details of a given analysis would be preserved, in one location, for later review.
+If, for example, one wanted to know the filter order used to prepare the displacement data, this could found using the command 
+
+\texttt{>> experiment.GetDropTower.GetDisplacement.GetFilterOrder()}.
+
+Raw data, as well as analysed data, are also stored in the class.
+In the end, saving the class object to disk allows for unified saving of all raw data, analysis routines and analysed data in a single \ac{mat}.
+ 
+The code for each of these data analysis classes are given below.
+Documentation is built into the MatLab files, so once they are placed in the current MatLab directory or path, help can be found by typing ``\texttt{help <Class Name>.<Method Name>}" at the command line.
+Alternatively, all methods are documented in the code.
+
+\subsection{Example input}
+\label{sec:code_dt_ins_analysis_example}
+Assuming that the data for the desired analysis are stored in ``C:\textbackslash Data\textbackslash TestData\textbackslash", an analysis can be carried out using the following code.
+\begin{singlespace}
+\begin{lstlisting}
+% Fill in the specimen data
+name = 'specimen01';
+gender = 'm';
+age = 80;
+height = 170;
+weight = 60;
+dxa = struct('neck',0.67,'troch',.70,'inter',.70,'total',.75,'wards',0);
+op = 'osteopenia';
+data = struct('InstronDAQ',1,'InstronDIC',1,'DropTowerDAQ',1,'DropTowerDisplacement',1,'DropTowerDIC',1);
+
+% create the specimen object
+specimen = Specimen(name,gender,age,height,weight,dxa,op,data);
+
+% create the experiment object. All sub-objects (DAQ analyses, etc) will be created based on the data structure.
+experiment = Experiment(specimen);
+
+% Get the Instron analysis
+instronAnalysis = experiment.GetInstron();
+
+% Setup the Instron DAQ parameters
+instronAnalysis.GetDAQData.SetFileName('C:\Data\TestData\InstronDAQ.csv');
+instronAnalysis.GetDAQData.ReadFile();
+
+instronAnalysis.GetDAQData.SetSampleRate(20000);
+instronAnalysis.GetDAQData.SetFilterCutoff(500);
+instronAnalysis.GetDAQData.SetGainDisplacement(.35);
+instronAnalysis.GetDAQData.SetGainLoad(1200);
+
+% Setup the Instron DIC
+instronAnalysis.GetDICData.SetFileName('C:\Data\TestData\InstronDIC.csv');
+instronAnalysis.GetDICData.ReadFile();
+
+instronAnalysis.GetDICData.SetSampleRate(100)
+instronAnalysis.GetDICData.SetStartTime(0.85)
+
+% Get the drop tower analysis
+dropTowerAnalysis = experiment.GetDropTower();
+
+% Setup the drop tower DAQ
+dropTowerDAQ = dropTowerAnalysis.GetDAQData();
+dropTowerDAQ.SetFileName('C:\Data\TestData\DropTowerDAQ.csv');
+dropTowerDAQ.ReadFile();
+
+dropTowerDAQ.SetExcitation(12);
+dropTowerDAQ.SetSampleRate(20000);
+dropTowerDAQ.SetFilterCutoff(500);
+dropTowerDAQ.SetFilterOrder(4);
+
+% Setup the drop tower displacement
+dropTowerDisp = dropTowerAnalysis.GetDisplacementData();
+dropTowerDisp.SetFileName('C:\Data\TestData\DropTowerDAQ.csv');
+dropTowerDisp.ReadFile();
+
+dropTowerDisp.SetSampleRate(9600);
+dropTowerDisp.SetFilterCutoff(500);
+dropTowerDisp.SetTimeStart(-0.05);
+dropTowerDisp.SetFilterOrder(2);
+
+% Setup the drop tower DIC
+dropTowerDIC = dropTowerAnalysis.GetDICData();
+dropTowerDIC.SetFileName('C:\Data\TestData\DropTowerDIC.csv');
+dropTowerDIC.ReadFile();
+
+dropTowerDIC.SetStartTime(-.03);
+dropTowerDIC.SetSampleRate(10000);
+
+% Run the analysis
+experiment.update(1);
+
+% Save the resulting data
+save('C:\Data\TestData\Specimen01.mat','experiment');
+\end{lstlisting}
+\end{singlespace}
+\begin{singlespace}
+\input{./appendixCode/analysisCode/analysisCode}
+\end{singlespace}
+
+\section{Idealized fall simulator model}
+\label{sec:code_ideal_fs}
+The idealized model discussed in \S\ref{sec:behave_fail_discssion} was solved using MatLab (R2010b, The Mathworks, Natick, MA).
+Code used to solve the equations and create the plots is given below.
+The code contained herein is available for download from\newline \url{https://github.com/sethgilchrist/IdealFallSimModel}.
+\begin{singlespace}
+\input{appendixCode/idealFS/idealFS}
+\end{singlespace}
+
+\section{\acs*{dic} to \acs*{dic} registration and comparison}
+\label{sec:code_dic_dic_register_compare}
+This section contains \ac{cpp} code used to register two surfaces created by DaVis and transfer a single set of point-data from one to the other.
+The code contained herein is available for download at \url{https://github.com/sethgilchrist/RegisterCompareDICSurfaces}.
+\begin{singlespace}
+\input{./appendixCode/compareSurfs/compareSurfs}	
+\end{singlespace}
+
+\section{Digital volume correlation}
+\label{sec:code_dvc}
+The \acf{dvc} algorithm is written in \ac{cpp} and used to conduct \ac{dvc} calculations on \acs{3d} image datasets.
+The code is available for download at \url{https://github.com/sethgilchrist/DigitalVolumeCorrelation}.
+
+\section{Digital volume correlation verification}
+\label{sec:code_synthetic}
+The \acf{dvc} code to verify the output of the algorithm is available for download at \url{https://github.com/sethgilchrist/SyntheticStrainImage}.
+The code applies a deformation field to a digital image, which creates strain for analysis using the \ac{dvc} algorithm.
+There are two algorithms included, the first applies the strain to an image to create an analysis image for the \ac{dvc}.
+The second takes the mesh output from the analysis and interpolates the true strain value at each point in the mesh, creating a second mesh containing the output, the ground truth and comparisons.

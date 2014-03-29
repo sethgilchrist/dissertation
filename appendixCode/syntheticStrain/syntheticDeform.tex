@@ -1,0 +1,183 @@
+\begin{lstlisting}
+//      SyntheticImageStrain.cxx
+//      
+//      Copyright 2010 Seth Gilchrist <seth@mech.ubc.ca>
+//      
+//      This program is free software; you can redistribute it and/or modify
+//      it under the terms of the GNU General Public License as published by
+//      the Free Software Foundation; either version 2 of the License, or
+//      (at your option) any later version.
+//      
+//      This program is distributed in the hope that it will be useful,
+//      but WITHOUT ANY WARRANTY; without even the implied warranty of
+//      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//      GNU General Public License for more details.
+//      
+//      You should have received a copy of the GNU General Public License
+//      along with this program; if not, write to the Free Software
+//      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+//      MA 02110-1301, USA.
+
+
+#include <iostream>
+#include "itkImage.h"
+#include "itkVector.h"
+#include "itkImageFileReader.h"
+#include "itkImageFileWriter.h"
+#include "itkWarpImageFilter.h"
+#include "itkImageRegionIteratorWithIndex.h"
+#include <itkBSplineInterpolateImageFunction.h>
+
+
+int main(int argc, char** argv)
+{
+	if (argc != 6){
+		std::cout<<"Improper usage."<<std::endl;
+		std::cout<<"Usage:"<<std::endl;
+		std::cout<<argv[0]<<" [Input Image Filename] [Output Image Filename] [Output Deformation Image] [Strain Field Type] [Maximum Strain in %]"<<std::endl<<std::endl;
+		std::cout<<"Strain Field Type:\n 1 = Constant \n 2 = Linear \n 3 = Sinusoidal"<<std::endl<<std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	// Define the images
+	typedef short										ImagePixelType;
+	typedef float										DeformationPixelComponentType;
+	const unsigned int dimension = 3;
+	typedef itk::Vector<DeformationPixelComponentType,dimension>	DeformationPixelType;
+	typedef itk::Image<ImagePixelType,dimension>		ImageType;
+	typedef	itk::Image<DeformationPixelType,dimension>	DeformationImageType;
+	
+	// Read the input image
+	typedef	itk::ImageFileReader<ImageType>				ImageReaderType;
+	ImageReaderType::Pointer	reader = ImageReaderType::New();
+	reader->SetFileName( argv[1] );
+	try{
+		reader->Update();
+	}
+	catch( itk::ExceptionObject &err ){
+		std::cout<<"Error when reading the input image.  Error message:"<<std::endl;
+		std::cout<<err<<std::endl<<std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	// Create the deformation image from the input image
+	DeformationImageType::Pointer	deformImage = DeformationImageType::New();
+	deformImage->SetOrigin( reader->GetOutput()->GetOrigin() );
+	deformImage->SetSpacing( reader->GetOutput()->GetSpacing() );
+	deformImage->SetRegions( reader->GetOutput()->GetLargestPossibleRegion() );
+	deformImage->Allocate();
+	
+	// Fill in the deformation image
+	typedef itk::ImageRegionIteratorWithIndex< DeformationImageType >	DeformationImageIteratorType;
+	DeformationImageIteratorType	deformIt( deformImage, deformImage->GetLargestPossibleRegion() );
+	float maxStrain = atof( argv[5] )/100;
+	unsigned int strainType = atoi( argv[4] );
+	DeformationImageType::SpacingType	spacing = deformImage->GetSpacing();
+	DeformationImageType::SizeType		size = deformImage->GetLargestPossibleRegion().GetSize();
+	
+	switch ( strainType ){
+		case 1:{ // constant
+			for (deformIt.GoToBegin(); ! deformIt.IsAtEnd(); ++deformIt){
+				DeformationPixelType			currentPixel;
+				DeformationImageType::IndexType	currentIndex;
+				currentIndex = deformIt.GetIndex();
+				currentPixel[0] = 0;
+				currentPixel[1] = 0;
+				currentPixel[2] = maxStrain*currentIndex[2]*spacing[2]; // constant strain = linear deformation
+				deformIt.Set(currentPixel);
+			}
+			break;
+		}
+		
+		case 2:{ // linear
+			//~ float coefficient = maxStrain/pow((size[2]*spacing[2]),2);
+			float coefficient = maxStrain/(2*size[2]*spacing[2]);
+			for (deformIt.GoToBegin(); ! deformIt.IsAtEnd(); ++deformIt){
+				DeformationPixelType			currentPixel;
+				DeformationImageType::IndexType	currentIndex;
+				currentIndex = deformIt.GetIndex();
+				currentPixel[0] = 0;
+				currentPixel[1] = 0;
+				currentPixel[2] = coefficient*pow((currentIndex[2]*spacing[2]),2); // linear strain = quadratic deformation
+				deformIt.Set(currentPixel);
+			}
+			break;
+		}
+			
+		case 3:{ // sinusoidial
+			float amplitude = maxStrain*(size[2]*spacing[2])/3.141592654;
+			float period = 3.141592654/size[2];	
+			for (deformIt.GoToBegin(); !deformIt.IsAtEnd(); ++deformIt){
+				DeformationPixelType			currentPixel;
+				DeformationImageType::IndexType	currentIndex;
+				currentIndex = deformIt.GetIndex();
+				currentPixel[0] = 0;
+				currentPixel[1] = 0;
+				currentPixel[2] = -amplitude*cos( currentIndex[2]*period );			
+				deformIt.Set(currentPixel);
+			}
+			break;
+		}
+		
+		default :
+			std::cout<<"No valid strain field type chosen."<<std::endl;
+			std::cout<<"The given value was: "<< argv[4]<<std::endl;
+			std::cout<<"Run: "<<argv[0]<<" with no options for more information."<<std::endl;
+			return EXIT_FAILURE;
+	}
+	
+	typedef itk::BSplineInterpolateImageFunction< ImageType, double, double> InterpolatorType;
+	InterpolatorType::Pointer	interpolator = InterpolatorType::New();
+	interpolator->SetSplineOrder( 4 );
+	
+	// create the deformation filter
+	typedef itk::WarpImageFilter< ImageType, ImageType, DeformationImageType >	WarpImageFilterType;
+	WarpImageFilterType::Pointer	warpFilter = WarpImageFilterType::New();
+	warpFilter->SetInterpolator( interpolator );
+	warpFilter->SetInput( reader->GetOutput() );
+	warpFilter->SetDeformationField( deformImage );
+	warpFilter->SetOutputSpacing( reader->GetOutput()->GetSpacing() );
+	warpFilter->SetOutputOrigin( reader->GetOutput()->GetOrigin() );
+	warpFilter->SetNumberOfThreads( 4 );
+	try{
+		warpFilter->Update();
+	}
+	catch( itk::ExceptionObject &err){
+		std::cout<<"Error updating the warping filter.  Error message:"<<std::endl;
+		std::cout<<err<<std::endl<<std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	// Write the image
+	typedef itk::ImageFileWriter< ImageType >		WriterType;
+	WriterType::Pointer		writer = WriterType::New();
+	writer->SetFileName( argv[2] );
+	writer->SetInput( warpFilter->GetOutput() );
+	try{
+		writer->Update();
+	}
+	catch( itk::ExceptionObject &err ){
+		std::cout<<"Error when writing the output image.  Error message:"<<std::endl;
+		std::cout<<err<<std::endl<<std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	// Write the deformation field
+	typedef itk::ImageFileWriter< DeformationImageType >	DeformWriterType;
+	DeformWriterType::Pointer	deformWriter = DeformWriterType::New();
+	deformWriter->SetFileName( argv[3] );
+	deformWriter->SetInput( deformImage );
+	try{
+		deformWriter->Update();
+	}
+	catch( itk::ExceptionObject &err ){
+		std::cout<<"Error when writing the deformation image.  Error message:"<<std::endl;
+		std::cout<<err<<std::endl<<std::endl;
+		return EXIT_FAILURE;
+	}
+	
+	
+	return 0;
+}
+
+\end{lstlisting}
